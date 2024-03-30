@@ -1,2 +1,2 @@
 # bytebass
-we all love those fonky basslines but wouldnt it be cool if an app told you whether you're playing the right scales? dont worry we gotchu :)
+we make sure your fonky basslines are in the correct scale
