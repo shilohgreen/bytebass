@@ -4,7 +4,7 @@ we make sure your fonky basslines are in the correct scale
 
 ## Fast Fourier Transform
 
-To compile: gcc fft.c -o fft -pedantic -Wall -Werror -lm
+To compile: gcc fft.c -o fft -pedantic -Wall -Werror -lm -lsndfile
 
 To run: ./fft <insert filename here\>
 
