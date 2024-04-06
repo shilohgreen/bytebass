@@ -1,1 +1,4 @@
-/wav_files
+.vscode/c_cpp_properties.json
+.vscode/settings.json
+FFT/fft
+.vscode/settings.json
