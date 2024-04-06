@@ -4,9 +4,13 @@ we make sure your fonky basslines are in the correct scale
 
 ## Fast Fourier Transform
 
-To compile: gcc fft.c -o fft -pedantic -Wall -Werror -lm
+Before running (on WSL ubuntu): 
 
-To run: ./fft <insert filename here\>
+Install sndfile reader: sudo apt-get install libsndfile1-dev
+
+To compile: gcc fft.c -o fft -pedantic -Wall -Werror -lm -lsndfile
+
+To run: ./fft <insert file path here\>
 
 ### How it works
 
