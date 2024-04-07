@@ -7,21 +7,16 @@
 #include "fft.h"
 
 int main(int argc, char *argv[]) {
-    // int size = (int) pow(2,10);
-    // printf("size: %d\n", size);
-    // double complex *input = generate_test_array(size);
-    // double complex* res = FFT(input, size);
-    // print_complex_array(res, size);
-    // free(input);
-    // free(res);
+    SNDFILE *file;
+    SF_INFO sfinfo;
+    char *filepath;
+    double* wav_arr;
 
     if (argc != 2) {
         printf("Usage: %s <filepath>\n", argv[0]);
         return 1;
     }
-    char *filepath = argv[1];
-    SNDFILE *file;
-    SF_INFO sfinfo;
+    filepath = argv[1];
     file = sf_open(filepath, SFM_READ, &sfinfo);
     if (!file) {
         printf("Error opening the file.\n");
@@ -34,39 +29,100 @@ int main(int argc, char *argv[]) {
     }
     sf_close(file);
 
-    double complex* wav_arr = wav_to_arr(filepath, sfinfo);
-    long int new_size;
-    double complex* arr = zero_pad_arr(wav_arr, sfinfo.frames, &new_size);
-    printf("No. of frames: %ld\n", sfinfo.frames);
-    printf("No. of frames (zero padded): %ld\n", new_size);
+    printf("No. frames: %ld\n", sfinfo.frames);
+    printf("Samples Rate: %d\n", sfinfo.samplerate);
 
-    double complex* res = FFT(arr, new_size);
-
-    int num_peaks;
-    Frame* peaks = find_peaks(res, new_size, &num_peaks);
-    // for (int i = 0; i < num_peaks; i++) {
-    //     printf("\n%d ", peaks[i].index);
-    // }
-    printf("Number of peaks: %d\n", num_peaks);
-    quickSort(peaks, 0, num_peaks - 1);
-    printf("\nMost common frequencies:\n");
-    for (int i = 1; i <= 5; i++) {
-        printf("%d ", peaks[num_peaks-i].index);
-    }
-    printf("\n");
-    free(res);
-    free(arr);
-    free(wav_arr);
+    wav_arr = wav_to_arr(filepath, sfinfo);
+    double freq = get_freq(wav_arr, sfinfo.frames, sfinfo.samplerate);
+    printf("Most common frequency: %lf Hz\n", freq);
     return 0;
 }
 
+double get_freq(double* arr, int size, int samplerate) {
+    int i;
+    long int N;
+    double complex* c_arr = (double complex*) malloc(size*sizeof(double complex));
+    double complex* fft_output;
+    Frame *output_frames, *peaks;
+    int num_peaks;
+    double freq;
+    for (i = 0; i < size; i++) {
+        c_arr[i] = arr[i] + 0*I;
+    }
+    c_arr = zero_pad_arr(c_arr, size, &N);
+    fft_output = FFT(c_arr, N);
+    output_frames = (Frame*) malloc(N/2*sizeof(Frame));
+    for (i = 0; i < N/2; i++) {
+        output_frames[i].index = i;
+        output_frames[i].energy = creal(fft_output[i]);
+        output_frames[i].freq = i*((double)samplerate/N);
+    }
+    peaks = find_peaks(output_frames, N/2, &num_peaks);
+    quickSort(peaks, 0, num_peaks - 1);
+    freq = peaks[num_peaks - 1].freq;
+    free(c_arr);
+    free(fft_output);
+    free(output_frames);
+    free(peaks);
+    return freq;
+}
+
+// Pre processing functions
+double* wav_to_arr(char* filepath, SF_INFO sfinfo) {
+    SNDFILE *file;
+    double *samples;
+
+    file = sf_open(filepath, SFM_READ, &sfinfo);
+    samples = (double *)malloc(sfinfo.frames * sizeof(double));
+    if (!samples) {
+        printf("Memory allocation failed.\n");
+        sf_close(file);
+        exit(1);
+    }
+    int num_samples_read = sf_read_double(file, samples, sfinfo.frames);
+    if (num_samples_read < sfinfo.frames) {
+        printf("Error reading samples from the file.\n");
+        free(samples);
+        sf_close(file);
+        exit(1);
+    }
+    // complex double* csamples = (complex double*)malloc(sfinfo.frames * sizeof(complex double));
+    // for (int i = 0; i < sfinfo.frames; i++) {
+    //     // converts double to complex double
+    //     csamples[i] = samples[i] + 0*I;
+    // }
+    sf_close(file);
+    return samples;
+    // return csamples;
+}
+
+double complex* zero_pad_arr(double complex* arr, int size, long int* padded_size) {
+    *padded_size = 1;
+    while (*padded_size < size) {
+        *padded_size *= 2;
+    }
+    double complex* padded_arr = (double complex*)malloc(*padded_size * sizeof(double complex));
+    if (padded_arr == NULL) {
+        fprintf(stderr, "Memory allocation failed.\n");
+        exit(1);
+    }
+    for (int i = 0; i < size; i++) {
+        padded_arr[i] = arr[i];
+    }
+    for (int i = size; i < *padded_size; i++) {
+        padded_arr[i] = 0.0 + 0.0 * I;
+    }
+    return padded_arr;
+}
+
+// FFT functions
 double complex* FFT(double complex* P, int n) {
     int i;
     double complex* P_e, *P_o, *y_e, *y_o;
-    double complex* y = malloc(n * sizeof(double complex));;
+    double complex* y = (double complex*) malloc(n * sizeof(double complex));;
     complex w = cexp((2*M_PI*I)/n);
     if (n == 1) {
-        double complex* P_new = malloc(sizeof(double complex));
+        double complex* P_new = (double complex*) malloc(sizeof(double complex));
         P_new[0] = P[0];
         return P_new;
     }
@@ -102,6 +158,7 @@ double complex* create_alternating_array(double complex* start, int size) {
     return arr;
 }
 
+// Printing functions
 void print_complex(double complex number) {
     printf("%.10f + %.10fi\n", creal(number), cimag(number));
 }
@@ -128,66 +185,9 @@ void print_double_array(double *doubles, int size) {
     printf("]\n");
 }
 
-double complex* wav_to_arr(char* filepath, SF_INFO sfinfo) {
-    SNDFILE *file;
-    double *samples;
 
-    file = sf_open(filepath, SFM_READ, &sfinfo);
-    samples = (double *)malloc(sfinfo.frames * sizeof(double));
-    if (!samples) {
-        printf("Memory allocation failed.\n");
-        sf_close(file);
-        exit(1);
-    }
-    int num_samples_read = sf_read_double(file, samples, sfinfo.frames);
-    if (num_samples_read < sfinfo.frames) {
-        printf("Error reading samples from the file.\n");
-        free(samples);
-        sf_close(file);
-        exit(1);
-    }
-    complex double* csamples = (complex double*)malloc(sfinfo.frames * sizeof(complex double));
-    for (int i = 0; i < sfinfo.frames; i++) {
-        // converts double to complex double
-        csamples[i] = samples[i] + 0*I;
-    }
-    sf_close(file);
-    return csamples;
-}
-
-double complex* zero_pad_arr(double complex* arr, int size, long int* padded_size) {
-    *padded_size = 1;
-    while (*padded_size < size) {
-        *padded_size *= 2;
-    }
-    double complex* padded_arr = (double complex*)malloc(*padded_size * sizeof(double complex));
-    if (padded_arr == NULL) {
-        fprintf(stderr, "Memory allocation failed.\n");
-        exit(1);
-    }
-    for (int i = 0; i < size; i++) {
-        padded_arr[i] = arr[i];
-    }
-    for (int i = size; i < *padded_size; i++) {
-        padded_arr[i] = 0.0 + 0.0 * I;
-    }
-    return padded_arr;
-}
-
-int find_max(double complex* arr, int size) {
-    // naive implementation since the wav files will be generated by us
-    double max = creal(arr[0]);
-    int index = 0;
-    for (int i = 1; i < size; i++) {
-        if (creal(arr[i]) > max) {
-            max = arr[i]; 
-            index = i;
-        }
-    }
-    return index;
-}
-
-Frame* find_peaks(complex double* arr, int size, int* num_peaks) {
+// FFT result Analysis
+Frame* find_peaks(Frame* arr, int size, int* num_peaks) {
     Frame* peaks = (Frame*)malloc(size * sizeof(Frame));
     if (peaks == NULL) {
         fprintf(stderr, "Memory allocation failed.\n");
@@ -195,9 +195,10 @@ Frame* find_peaks(complex double* arr, int size, int* num_peaks) {
     }
     *num_peaks = 0;
     for (int i = 1; i < size - 1; i++) {
-        if (creal(arr[i]) > creal(arr[i - 1]) && creal(arr[i]) > creal(arr[i + 1])) {
-            peaks[*num_peaks].value = creal(arr[i]);
-            peaks[*num_peaks].index = i;
+        if (arr[i].energy > arr[i - 1].energy && arr[i].energy > arr[i + 1].energy) {
+            peaks[*num_peaks].index = arr[i].index;
+            peaks[*num_peaks].energy = arr[i].energy;
+            peaks[*num_peaks].freq = arr[i].freq;
             (*num_peaks)++;
         }
     }
@@ -209,6 +210,7 @@ Frame* find_peaks(complex double* arr, int size, int* num_peaks) {
     return peaks;
 }
 
+// Sorting (Quicksort)
 void swap(Frame* p1, Frame* p2) {
     Frame temp;
     temp = p1[0];
@@ -217,10 +219,10 @@ void swap(Frame* p1, Frame* p2) {
 }
 
 int partition(Frame* arr, int low, int high) {
-    double pivot = arr[high].value;
+    double pivot = arr[high].energy;
     int i = low - 1;
     for (int j = low; j <= high; j++) {
-        if (arr[j].value < pivot) {
+        if (arr[j].energy < pivot) {
             i++;
             swap(&arr[i], &arr[j]);
         }
