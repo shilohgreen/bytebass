@@ -16,7 +16,6 @@ int main(int argc, char *argv[]) {
         printf("Usage: %s <filepath>\n", argv[0]);
         return 1;
     }
-    printf("c");
     filepath = argv[1];
     file = sf_open(filepath, SFM_READ, &sfinfo);
     if (!file) {
@@ -61,6 +60,10 @@ double get_freq(double* arr, int size, int samplerate) {
     peaks = find_peaks(output_frames, N/2, &num_peaks);
     quickSort(peaks, 0, num_peaks - 1);
     freq = peaks[num_peaks - 1].freq;
+    printf("Top 5 frequencies:\n");
+    for (i = 1; i <= 5; i++) {
+        printf("%d: %f\n" , i, peaks[num_peaks - i].freq);
+    }
     free(c_arr);
     free(fft_output);
     free(output_frames);
