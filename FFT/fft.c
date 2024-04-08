@@ -16,6 +16,7 @@ int main(int argc, char *argv[]) {
         printf("Usage: %s <filepath>\n", argv[0]);
         return 1;
     }
+    printf("c");
     filepath = argv[1];
     file = sf_open(filepath, SFM_READ, &sfinfo);
     if (!file) {
