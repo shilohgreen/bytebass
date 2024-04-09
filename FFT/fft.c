@@ -6,43 +6,7 @@
 #include <sndfile.h>
 #include "fft.h"
 
-int run_fft(int argc, char *argv[])
-{
-    SNDFILE *file;
-    SF_INFO sfinfo;
-    char *filepath;
-    double *wav_arr;
-
-    if (argc != 2)
-    {
-        printf("Usage: %s <filepath>\n", argv[0]);
-        return 1;
-    }
-    filepath = argv[1];
-    file = sf_open(filepath, SFM_READ, &sfinfo);
-    if (!file)
-    {
-        printf("Error opening the file.\n");
-        exit(1);
-    }
-    if (sfinfo.channels != 1)
-    {
-        printf("WAV file has %d channels. Only mono channel WAV files accepted.\n", sfinfo.channels);
-        sf_close(file);
-        exit(1);
-    }
-    sf_close(file);
-
-    printf("No. frames: %ld\n", sfinfo.frames);
-    printf("Samples Rate: %d\n", sfinfo.samplerate);
-
-    wav_arr = wav_to_arr(filepath, sfinfo);
-    double freq = get_freq(wav_arr, sfinfo.frames, sfinfo.samplerate);
-    printf("Most common frequency: %lf Hz\n", freq);
-    return 0;
-}
-
-double get_freq(double *arr, int size, int samplerate)
+double *get_freq(double *freqArray, double *arr, int size, int samplerate)
 {
     int i;
     long int N;
@@ -67,16 +31,15 @@ double get_freq(double *arr, int size, int samplerate)
     peaks = find_peaks(output_frames, N / 2, &num_peaks);
     quickSort(peaks, 0, num_peaks - 1);
     freq = peaks[num_peaks - 1].freq;
-    printf("Top 5 frequencies:\n");
     for (i = 1; i <= 5; i++)
     {
-        printf("%d: %f\n", i, peaks[num_peaks - i].freq);
+        freqArray[i - 1] = peaks[num_peaks - i].freq;
     }
     free(c_arr);
     free(fft_output);
     free(output_frames);
     free(peaks);
-    return freq;
+    return freqArray;
 }
 
 // Pre processing functions

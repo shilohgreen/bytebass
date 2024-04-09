@@ -1,1 +1,0 @@
-int * offset_scale(char * root_note, int * scale, int scale_len);

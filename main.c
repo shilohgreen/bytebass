@@ -5,6 +5,7 @@
 #include <string.h>
 #include <sndfile.h>
 #include "FFT/fft.h"
+#include "fsm.h"
 
 // Define the maximum number of note segments
 #define MAX_SEGMENTS 100
@@ -24,9 +25,9 @@ int main(int argc, char *argv[])
     char *filepath;
     double *wav_arr;
 
-    if (argc != 2)
+    if (argc != 3)
     {
-        printf("Usage: %s <filepath>\n", argv[0]);
+        printf("Usage: %s <filepath> <scale>\n", argv[0]);
         return 1;
     }
     filepath = argv[1];
@@ -77,6 +78,14 @@ int main(int argc, char *argv[])
 
     wav_arr = wav_to_arr(filepath, sfinfo);
 
+    // Set FSM to desired scale
+    identifyScale(argv[2]);
+
+    char *noteLogger;
+
+    CombinedNoteFSM fsm = {STARTING_STATE,
+                           noteLogger};
+
     // Perform FFT analysis on each segment
     for (int i = 0; i < MAX_SEGMENTS; i++)
     {
@@ -85,6 +94,7 @@ int main(int argc, char *argv[])
         int end_index = segments[i].end_index;
         int segment_length = end_index - start_index + 1;
         double segment[segment_length];
+        double *freqArray = (double *)malloc(sizeof(double) * 5);
         for (int j = start_index; j <= end_index; j++)
         {
             segment[j - start_index] = wav_arr[j];
@@ -92,7 +102,26 @@ int main(int argc, char *argv[])
 
         // Perform FFT analysis on the segment
         printf("Segment %d:\n", i + 1);
-        get_freq(segment, segment_length, 44100); // Pass appropriate sample rate
+        freqArray = (double *)get_freq(freqArray, segment, segment_length, 44100); // Pass appropriate sample rate
+
+        for (int j = 0; j < 5; j++)
+        {
+            // Loop through the possible frequencies for each segment
+            double freqIteration = freqArray[j];
+            // If its outside the boundary, it is invalid, change it to null
+            if (freqIteration < 130 || freqIteration > 260)
+            {
+                freqArray[j] = 0;
+            }
+            // If within frequency boundary change to null
+            else
+            {
+                freqArray[j] = normalization(freqArray[j]);
+            }
+        }
+
+        // freqArray is now the array with normalized freq values
+        processScaleNote(&fsm, freqArray , scaleAddress);
     }
 
     // double freq = get_freq(wav_arr, sfinfo.frames, sfinfo.samplerate);
