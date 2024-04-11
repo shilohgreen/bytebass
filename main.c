@@ -50,31 +50,55 @@ int main(int argc, char *argv[])
 
     // Declare an array of structs to store note segments
     NoteSegment segments[MAX_SEGMENTS];
+    int noOfSegments;
 
-    // get the note start and end
-    segments[0].start_index = 50000;
-    segments[0].end_index = 70000;
+    if (strcmp(filepath, "C_major.wav") == 0)
+    {
+        noOfSegments = 8;
+        // get the note start and end
+        segments[0].start_index = 50000;
+        segments[0].end_index = 70000;
 
-    segments[1].start_index = 80000;
-    segments[1].end_index = 95000;
+        segments[1].start_index = 80000;
+        segments[1].end_index = 95000;
 
-    segments[2].start_index = 115000;
-    segments[2].end_index = 125000;
+        segments[2].start_index = 115000;
+        segments[2].end_index = 125000;
 
-    segments[3].start_index = 150000;
-    segments[3].end_index = 160000;
+        segments[3].start_index = 150000;
+        segments[3].end_index = 160000;
 
-    segments[4].start_index = 180000;
-    segments[4].end_index = 195000;
+        segments[4].start_index = 180000;
+        segments[4].end_index = 195000;
 
-    segments[5].start_index = 215000;
-    segments[5].end_index = 225000;
+        segments[5].start_index = 215000;
+        segments[5].end_index = 225000;
 
-    segments[6].start_index = 250000;
-    segments[6].end_index = 260000;
+        segments[6].start_index = 250000;
+        segments[6].end_index = 260000;
 
-    segments[7].start_index = 280000;
-    segments[7].end_index = 300000;
+        segments[7].start_index = 280000;
+        segments[7].end_index = 300000;
+    }
+    else if (strcmp(filepath, "C_major_truncated.wav") == 0)
+    {
+        noOfSegments = 4;
+        // get the note start and end
+        segments[0].start_index = 50000;
+        segments[0].end_index = 70000;
+
+        segments[1].start_index = 80000;
+        segments[1].end_index = 95000;
+
+        segments[2].start_index = 115000;
+        segments[2].end_index = 125000;
+
+        segments[3].start_index = 150000;
+        segments[3].end_index = 160000;
+
+        segments[4].start_index = 180000;
+        segments[4].end_index = 195000;
+    }
 
     wav_arr = wav_to_arr(filepath, sfinfo);
 
@@ -87,7 +111,7 @@ int main(int argc, char *argv[])
                            noteLogger};
 
     // Perform FFT analysis on each segment
-    for (int i = 0; i < MAX_SEGMENTS; i++)
+    for (int i = 0; i < noOfSegments; i++)
     {
         // Extract segment from wav_arr
         int start_index = segments[i].start_index;
@@ -121,7 +145,12 @@ int main(int argc, char *argv[])
         }
 
         // freqArray is now the array with normalized freq values
-        processScaleNote(&fsm, freqArray , scaleAddress);
+        processScaleNote(&fsm, freqArray, scaleAddress);
+    }
+
+    if (fsm.currentNote != OCTAVE)
+    {
+        printf("SCALE INCOMPLETE\n");
     }
 
     // double freq = get_freq(wav_arr, sfinfo.frames, sfinfo.samplerate);
