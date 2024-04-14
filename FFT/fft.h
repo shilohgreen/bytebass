@@ -18,7 +18,6 @@ void print_complex(double complex number);
 void print_complex_array(double complex *number, int size);
 void print_double_array(double *doubles, int size);
 
-double *wav_to_arr(char *filepath, SF_INFO sfinfo);
 double complex *zero_pad_arr(double complex *arr, int size, long int *padded_size);
 
 Frame *find_peaks(Frame *arr, int size, int *num_peaks);
