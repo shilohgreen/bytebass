@@ -18,7 +18,6 @@ typedef enum
 typedef struct
 {
     Scale currentNote;
-    char *noteLogger;
 } CombinedNoteFSM;
 
 typedef struct ScaleMapping
@@ -27,7 +26,13 @@ typedef struct ScaleMapping
     double *scaleArray;
 } ScaleMapping;
 
-//                      C    C#   D    D#   E    F    F#   G    G#   A    A#   B
+typedef struct NoteMapping
+{
+    char *note;
+    int frequency;
+} NoteMapping;
+
+//                          C    C#   D    D#   E    F    F#   G    G#   A    A#   B
 double allFrequencies[] = {131, 139, 147, 156, 165, 175, 185, 196, 208, 220, 233, 245};
 
 double cMajor[] = {131, 147, 165, 175, 196, 220, 245, 131};
@@ -85,8 +90,21 @@ ScaleMapping scales[] = {
     {"bMinor", bMinor},
 };
 
-// This function will first divide the frequencies by 2 until it is within the desired range
-// After division, it will round to the nearest acceptable frequency (defined by all frequencies)
+NoteMapping notes[] = {
+    {"C", 131},
+    {"C#", 139},
+    {"D", 147},
+    {"D#", 156},
+    {"E", 165},
+    {"F", 175},
+    {"F#", 185},
+    {"G", 196},
+    {"G#", 208},
+    {"A", 220},
+    {"A#", 233},
+    {"B", 245},
+};
+// This function normalizes a freq to the nearest note (represented by discrete frequency value within the allFrequencies array)
 double normalization(double freq)
 {
     int i;
@@ -99,7 +117,7 @@ double normalization(double freq)
         // Loop through frequency array to find it lies
         if (freq > allFrequencies[i])
         {
-            // if its higher than B3 just round to B3
+            // if its higher than B just round to B
             if (freq > 245)
             {
                 return 245;
@@ -123,7 +141,7 @@ double normalization(double freq)
     return 131;
 }
 
-// from user input, hash into array
+// from user input, load correct scale address from hash map
 void identifyScale(char *scaleInput)
 {
     int i;
@@ -137,7 +155,20 @@ void identifyScale(char *scaleInput)
     }
 }
 
-void processScaleNote(CombinedNoteFSM *combinedFsm, double *frequency, double *modelScale)
+char *frequencyToNote(int freq)
+{
+    int i;
+    for (i = 0; i < 12; i++)
+    {
+        if (freq == notes[i].frequency)
+        {
+            return notes[i].note;
+        }
+    }
+    return notes[0].note;
+}
+
+void processScaleNote(CombinedNoteFSM *combinedFsm, double *frequency, double *modelScale, FILE *outputFilePointer)
 {
     int i;
     switch (combinedFsm->currentNote)
@@ -152,7 +183,7 @@ void processScaleNote(CombinedNoteFSM *combinedFsm, double *frequency, double *m
                 break;
             }
         }
-        if (combinedFsm->currentNote = FIRST)
+        if (combinedFsm->currentNote == FIRST)
         {
             break;
         }
@@ -167,7 +198,7 @@ void processScaleNote(CombinedNoteFSM *combinedFsm, double *frequency, double *m
                 break;
             }
         }
-        if (combinedFsm->currentNote = SECOND)
+        if (combinedFsm->currentNote == SECOND)
         {
             break;
         }
@@ -182,7 +213,7 @@ void processScaleNote(CombinedNoteFSM *combinedFsm, double *frequency, double *m
                 break;
             }
         }
-        if (combinedFsm->currentNote = THIRD)
+        if (combinedFsm->currentNote == THIRD)
         {
             break;
         }
@@ -197,7 +228,7 @@ void processScaleNote(CombinedNoteFSM *combinedFsm, double *frequency, double *m
                 break;
             }
         }
-        if (combinedFsm->currentNote = FOURTH)
+        if (combinedFsm->currentNote == FOURTH)
         {
             break;
         }
@@ -212,7 +243,7 @@ void processScaleNote(CombinedNoteFSM *combinedFsm, double *frequency, double *m
                 break;
             }
         }
-        if (combinedFsm->currentNote = FIFTH)
+        if (combinedFsm->currentNote == FIFTH)
         {
             break;
         }
@@ -227,7 +258,7 @@ void processScaleNote(CombinedNoteFSM *combinedFsm, double *frequency, double *m
                 break;
             }
         }
-        if (combinedFsm->currentNote = SIXTH)
+        if (combinedFsm->currentNote == SIXTH)
         {
             break;
         }
@@ -242,7 +273,7 @@ void processScaleNote(CombinedNoteFSM *combinedFsm, double *frequency, double *m
                 break;
             }
         }
-        if (combinedFsm->currentNote = SEVENTH)
+        if (combinedFsm->currentNote == SEVENTH)
         {
             break;
         }
@@ -258,16 +289,21 @@ void processScaleNote(CombinedNoteFSM *combinedFsm, double *frequency, double *m
                 break;
             }
         }
-        if (combinedFsm->currentNote = OCTAVE)
+        if (combinedFsm->currentNote == OCTAVE)
         {
             break;
         }
         combinedFsm->currentNote = INVALID_STATE;
         break;
+    case OCTAVE:
+        break;
     case INVALID_STATE:
         break;
     }
     printf("FSM State: %d\n", combinedFsm->currentNote);
+    // Write state to file
+    fprintf(outputFilePointer, " %s\n", frequencyToNote(frequency[i]));
+
     if (combinedFsm->currentNote == OCTAVE)
     {
         printf("SCALE COMPLETE\n");

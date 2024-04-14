@@ -14,7 +14,7 @@ double *get_freq(double *freqArray, double *arr, int size, int samplerate)
     double complex *fft_output;
     Frame *output_frames, *peaks;
     int num_peaks;
-    double freq;
+
     for (i = 0; i < size; i++)
     {
         c_arr[i] = arr[i] + 0 * I;
@@ -30,7 +30,6 @@ double *get_freq(double *freqArray, double *arr, int size, int samplerate)
     }
     peaks = find_peaks(output_frames, N / 2, &num_peaks);
     quickSort(peaks, 0, num_peaks - 1);
-    freq = peaks[num_peaks - 1].freq;
     for (i = 1; i <= 5; i++)
     {
         freqArray[i - 1] = peaks[num_peaks - i].freq;
