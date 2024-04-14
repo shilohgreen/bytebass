@@ -41,38 +41,6 @@ double *get_freq(double *freqArray, double *arr, int size, int samplerate)
     return freqArray;
 }
 
-// Pre processing functions
-double *wav_to_arr(char *filepath, SF_INFO sfinfo)
-{
-    SNDFILE *file;
-    double *samples;
-
-    file = sf_open(filepath, SFM_READ, &sfinfo);
-    samples = (double *)malloc(sfinfo.frames * sizeof(double));
-    if (!samples)
-    {
-        printf("Memory allocation failed.\n");
-        sf_close(file);
-        exit(1);
-    }
-    int num_samples_read = sf_read_double(file, samples, sfinfo.frames);
-    if (num_samples_read < sfinfo.frames)
-    {
-        printf("Error reading samples from the file.\n");
-        free(samples);
-        sf_close(file);
-        exit(1);
-    }
-    // complex double* csamples = (complex double*)malloc(sfinfo.frames * sizeof(complex double));
-    // for (int i = 0; i < sfinfo.frames; i++) {
-    //     // converts double to complex double
-    //     csamples[i] = samples[i] + 0*I;
-    // }
-    sf_close(file);
-    return samples;
-    // return csamples;
-}
-
 double complex *zero_pad_arr(double complex *arr, int size, long int *padded_size)
 {
     *padded_size = 1;

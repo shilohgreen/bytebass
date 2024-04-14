@@ -4,7 +4,7 @@
 #include <math.h>
 #include <complex.h>
 #include "FFT/fft.h"
-#include "fsm.h"
+#include "fsm/fsm.h"
 #include "noteSegmentation/note_segmentation.h"
 
 #define MAX_SEGMENTS 100
@@ -135,7 +135,6 @@ int main(int argc, char *argv[])
         for (int j = 0; j < 5; j++)
         {
             double freqIteration = freqArray[j];
-            printf("Before normalization: %f\n", freqArray[j]);
             freqArray[j] = normalization(freqArray[j]);
         }
 

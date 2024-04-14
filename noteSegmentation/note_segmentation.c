@@ -70,8 +70,8 @@ NoteSegment *detect_note_onsets(float *moving_average, int num_samples, float th
             segments[*segment_count].fall_index = fall;
             // Increment segment count
             (*segment_count)++;
-            printf("Rise at %d with amplitude: %f\n", rise, moving_average[rise]);
-            printf("Fall at %d with amplitude: %f\n", fall, moving_average[rise]);
+            // printf("Rise at %d with amplitude: %f\n", rise, moving_average[rise]);
+            // printf("Fall at %d with amplitude: %f\n", fall, moving_average[rise]);
             rise = -1;
         }
     }
