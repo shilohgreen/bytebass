@@ -31,6 +31,17 @@ typedef struct
 
 int main(int argc, char *argv[])
 {
+    // Output file pointer
+    FILE *outputFilePointer;
+
+    outputFilePointer = fopen("example.txt", "a");
+
+    if (outputFilePointer == NULL)
+    {
+        printf("Error creating txt file.\n");
+        return 1; // Return an error code
+    }
+
     if (argc != 3)
     {
         printf("Usage: %s <filepath> <scale>\n", argv[0]);
@@ -82,10 +93,7 @@ int main(int argc, char *argv[])
     // Set FSM to desired scale
     identifyScale(argv[2]);
 
-    char *noteLogger;
-
-    CombinedNoteFSM fsm = {STARTING_STATE,
-                           noteLogger};
+    CombinedNoteFSM fsm = {STARTING_STATE};
 
     // Perform FFT analysis on each segment
     for (int i = 0; i < noOfSegments; i++)
@@ -114,7 +122,7 @@ int main(int argc, char *argv[])
             {
                 freqArray[j] = 0;
             }
-            // If within frequency boundary change to null
+            // If within frequency boundary change round to nearest discrete frequency
             else
             {
                 freqArray[j] = normalization(freqArray[j]);
@@ -122,7 +130,7 @@ int main(int argc, char *argv[])
         }
 
         // freqArray is now the array with normalized freq values
-        processScaleNote(&fsm, freqArray);
+        processScaleNote(&fsm, freqArray, outputFilePointer);
     }
 
     if (fsm.currentNote != OCTAVE)
