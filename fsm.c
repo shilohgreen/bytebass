@@ -1,31 +1,6 @@
 #include <stdio.h>
 #include <string.h>
-
-typedef enum
-{
-    STARTING_STATE,
-    FIRST,
-    SECOND,
-    THIRD,
-    FOURTH,
-    FIFTH,
-    SIXTH,
-    SEVENTH,
-    OCTAVE,
-    INVALID_STATE
-} Scale;
-
-typedef struct
-{
-    Scale currentNote;
-    char *noteLogger;
-} CombinedNoteFSM;
-
-typedef struct ScaleMapping
-{
-    char *name;
-    double *scaleArray;
-} ScaleMapping;
+#include "fsm.h"
 
 //                      C    C#   D    D#   E    F    F#   G    G#   A    A#   B
 double allFrequencies[] = {131, 139, 147, 156, 165, 175, 185, 196, 208, 220, 233, 245};
@@ -137,7 +112,7 @@ void identifyScale(char *scaleInput)
     }
 }
 
-void processScaleNote(CombinedNoteFSM *combinedFsm, double *frequency, double *modelScale)
+void processScaleNote(CombinedNoteFSM *combinedFsm, double *frequency)
 {
     int i;
     switch (combinedFsm->currentNote)

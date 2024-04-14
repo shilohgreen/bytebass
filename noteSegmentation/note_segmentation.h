@@ -1,1 +1,8 @@
-void detect_note_onsets(float *moving_average, int num_samples, float threshold);
+// Struct to store rise and fall indices for a note segment
+typedef struct
+{
+    int rise_index;
+    int fall_index;
+} NoteSegment;
+
+NoteSegment *get_segments(int16_t *audio_data, int num_samples, int *segment_count);

@@ -6,101 +6,78 @@
 #include <sndfile.h>
 #include "FFT/fft.h"
 #include "fsm.h"
+#include "noteSegmentation/note_segmentation.h"
 
 // Define the maximum number of note segments
 #define MAX_SEGMENTS 100
 
-// Define a struct to represent a note segment
+// WAV file header struct
 typedef struct
 {
-    int start_index;
-    int end_index;
-} NoteSegment;
+    char chunk_id[4];
+    uint32_t chunk_size;
+    char format[4];
+    char subchunk1_id[4];
+    uint32_t subchunk1_size;
+    uint16_t audio_format;
+    uint16_t num_channels;
+    uint32_t sample_rate;
+    uint32_t byte_rate;
+    uint16_t block_align;
+    uint16_t bits_per_sample;
+    char subchunk2_id[4];
+    uint32_t subchunk2_size;
+} WavHeader;
 
 int main(int argc, char *argv[])
 {
-    // Read wav file
-    SNDFILE *file;
-    SF_INFO sfinfo;
-    char *filepath;
-    double *wav_arr;
-
     if (argc != 3)
     {
         printf("Usage: %s <filepath> <scale>\n", argv[0]);
         return 1;
     }
-    filepath = argv[1];
-    file = sf_open(filepath, SFM_READ, &sfinfo);
+    char *filepath = argv[1];
+
+    // Read WAV file header and audio data
+    // (You can use your provided code for reading WAV files here)
+    FILE *file;
+    WavHeader header;
+    int16_t *audio_data;
+    int num_samples;
+
+    // Open the WAV file
+    file = fopen(filepath, "rb");
     if (!file)
     {
-        printf("Error opening the file.\n");
-        exit(1);
+        printf("Error opening file\n");
     }
-    if (sfinfo.channels != 1)
-    {
-        printf("WAV file has %d channels. Only mono channel WAV files accepted.\n", sfinfo.channels);
-        sf_close(file);
-        exit(1);
-    }
-    sf_close(file);
 
-    printf("No. frames: %ld\n", sfinfo.frames);
-    printf("Samples Rate: %d\n", sfinfo.samplerate);
+    // Read the WAV file header
+    fread(&header, sizeof(WavHeader), 1, file);
+
+    // Allocate memory for audio data
+    num_samples = header.subchunk2_size / (header.bits_per_sample / 8);
+    audio_data = (int16_t *)malloc(num_samples * sizeof(int16_t));
+
+    // Read audio data from the file
+    fread(audio_data, sizeof(int16_t), num_samples, file);
+
+    // Close the file
+    fclose(file);
+
+    // Process the audio data as needed
+    printf("NUM CHANNELS: %d\n", header.num_channels);
+    printf("SAMPLE RATE: %d\n", header.sample_rate);
+    printf("BYTE RATE: %d\n", header.byte_rate);
+    printf("BITS PER SAMPLE: %d\n", header.bits_per_sample);
+    printf("FORMAT: %d\n", header.audio_format);
+    printf("NUM SAMPLES: %d\n", num_samples);
 
     // Declare an array of structs to store note segments
-    NoteSegment segments[MAX_SEGMENTS];
+    NoteSegment *segments;
     int noOfSegments;
 
-    if (strcmp(filepath, "C_major.wav") == 0)
-    {
-        noOfSegments = 8;
-        // get the note start and end
-        segments[0].start_index = 50000;
-        segments[0].end_index = 70000;
-
-        segments[1].start_index = 80000;
-        segments[1].end_index = 95000;
-
-        segments[2].start_index = 115000;
-        segments[2].end_index = 125000;
-
-        segments[3].start_index = 150000;
-        segments[3].end_index = 160000;
-
-        segments[4].start_index = 180000;
-        segments[4].end_index = 195000;
-
-        segments[5].start_index = 215000;
-        segments[5].end_index = 225000;
-
-        segments[6].start_index = 250000;
-        segments[6].end_index = 260000;
-
-        segments[7].start_index = 280000;
-        segments[7].end_index = 300000;
-    }
-    else if (strcmp(filepath, "C_major_truncated.wav") == 0)
-    {
-        noOfSegments = 4;
-        // get the note start and end
-        segments[0].start_index = 50000;
-        segments[0].end_index = 70000;
-
-        segments[1].start_index = 80000;
-        segments[1].end_index = 95000;
-
-        segments[2].start_index = 115000;
-        segments[2].end_index = 125000;
-
-        segments[3].start_index = 150000;
-        segments[3].end_index = 160000;
-
-        segments[4].start_index = 180000;
-        segments[4].end_index = 195000;
-    }
-
-    wav_arr = wav_to_arr(filepath, sfinfo);
+    segments = get_segments(audio_data, num_samples, &noOfSegments);
 
     // Set FSM to desired scale
     identifyScale(argv[2]);
@@ -114,19 +91,19 @@ int main(int argc, char *argv[])
     for (int i = 0; i < noOfSegments; i++)
     {
         // Extract segment from wav_arr
-        int start_index = segments[i].start_index;
-        int end_index = segments[i].end_index;
+        int start_index = segments[i].rise_index;
+        int end_index = segments[i].fall_index;
         int segment_length = end_index - start_index + 1;
         double segment[segment_length];
         double *freqArray = (double *)malloc(sizeof(double) * 5);
         for (int j = start_index; j <= end_index; j++)
         {
-            segment[j - start_index] = wav_arr[j];
+            segment[j - start_index] = (double)audio_data[j];
         }
 
         // Perform FFT analysis on the segment
         printf("Segment %d:\n", i + 1);
-        freqArray = (double *)get_freq(freqArray, segment, segment_length, 44100); // Pass appropriate sample rate
+        freqArray = get_freq(freqArray, segment, segment_length, 44100); // Pass appropriate sample rate
 
         for (int j = 0; j < 5; j++)
         {
@@ -145,7 +122,7 @@ int main(int argc, char *argv[])
         }
 
         // freqArray is now the array with normalized freq values
-        processScaleNote(&fsm, freqArray, scaleAddress);
+        processScaleNote(&fsm, freqArray);
     }
 
     if (fsm.currentNote != OCTAVE)
