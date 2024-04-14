@@ -3,7 +3,7 @@
 #include "fsm.h"
 
 //                          C    C#   D    D#   E    F    F#   G    G#   A    A#   B
-double allFrequencies[] = {131, 139, 147, 156, 165, 175, 185, 196, 208, 220, 233, 245};
+double allFrequencies[] = {131, 139, 147, 156, 165, 175, 185, 196, 208, 220, 233, 245, 261};
 
 double cMajor[] = {131, 147, 165, 175, 196, 220, 245, 131};
 double csMajor[] = {139, 156, 175, 185, 208, 220, 233, 139};
@@ -26,7 +26,7 @@ double eMinor[] = {165, 185, 196, 220, 245, 131, 147, 165};
 double fMinor[] = {175, 196, 208, 233, 245, 139, 156, 175};
 double fsMinor[] = {185, 208, 220, 245, 131, 147, 156, 185};
 double gMinor[] = {196, 220, 233, 245, 139, 156, 165, 196};
-double gsMinor[] = {208, 233, 245 131, 147, 156, 165, 208};
+double gsMinor[] = {208, 233, 245, 131, 147, 156, 165, 208};
 double aMinor[] = {220, 245, 139, 156, 165, 175, 185, 220};
 double asMinor[] = {233, 245, 139, 147, 156, 165, 175, 233};
 double bMinor[] = {245, 131, 147, 156, 165, 175, 185, 245};
@@ -82,18 +82,17 @@ double normalization(double freq)
     double diffA;
     double diffB;
 
+    while (freq > 260)
+    {
+        freq = freq / 2;
+    }
+
     // round to nearest whole frequency
     for (i = 11; i >= 0; i--)
     {
         // Loop through frequency array to find it lies
         if (freq > allFrequencies[i])
         {
-            // if its higher than B just round to B
-            if (freq > 245)
-            {
-                return 245;
-            }
-
             // it lies between allFrequencies[i] and allFrequencies[i + 1]
             diffA = freq - allFrequencies[i];
             diffB = allFrequencies[i + 1] - freq;

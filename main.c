@@ -117,17 +117,12 @@ int main(int argc, char *argv[])
         {
             // Loop through the possible frequencies for each segment
             double freqIteration = freqArray[j];
+            printf("Before normal: %f\n", freqArray[j]);
             // If its outside the boundary, it is invalid, change it to null
-            if (freqIteration < 130 || freqIteration > 260)
-            {
-                freqArray[j] = 0;
-            }
+
             // If within frequency boundary change round to nearest discrete frequency
             // If within frequency boundary change round to nearest discrete frequency
-            else
-            {
-                freqArray[j] = normalization(freqArray[j]);
-            }
+            freqArray[j] = normalization(freqArray[j]);
         }
 
         // freqArray is now the array with normalized freq values
