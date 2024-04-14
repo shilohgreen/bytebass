@@ -24,6 +24,12 @@ typedef struct ScaleMapping
     double *scaleArray;
 } ScaleMapping;
 
+typedef struct NoteMapping
+{
+    char *note;
+    int frequency;
+} NoteMapping;
+
 double normalization(double freq);
 void identifyScale(char *scaleInput);
-void processScaleNote(CombinedNoteFSM *combinedFsm, double *frequency);
+void processScaleNote(CombinedNoteFSM *combinedFsm, double *frequency, FILE *outputFilePointer);

@@ -123,6 +123,7 @@ int main(int argc, char *argv[])
                 freqArray[j] = 0;
             }
             // If within frequency boundary change round to nearest discrete frequency
+            // If within frequency boundary change round to nearest discrete frequency
             else
             {
                 freqArray[j] = normalization(freqArray[j]);
