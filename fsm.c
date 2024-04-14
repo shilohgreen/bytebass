@@ -141,6 +141,11 @@ char *frequencyToNote(int freq)
 void processScaleNote(CombinedNoteFSM *combinedFsm, double *frequency, FILE *outputFilePointer)
 {
     int i;
+    printf("%f\n", frequency[0]);
+    printf("%f\n", frequency[1]);
+    printf("%f\n", frequency[2]);
+    printf("%f\n", frequency[3]);
+    printf("%f\n", frequency[4]);
     switch (combinedFsm->currentNote)
     {
     case STARTING_STATE:

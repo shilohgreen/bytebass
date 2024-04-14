@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
     // Output file pointer
     FILE *outputFilePointer;
 
-    outputFilePointer = fopen("example.txt", "a");
+    outputFilePointer = fopen("output.txt", "a");
 
     if (outputFilePointer == NULL)
     {
